@@ -3,11 +3,6 @@
 Registro obligatorio de dónde y cómo se usó IA en el trabajo final (una entrada por fase).
 Alimenta el apartado "Reflexiones sobre el uso de la IA generativa" del informe.
 
-> Nota: el plan pedía frenar al final de cada fase para revisión humana. En esta sesión el
-> grupo pidió explícitamente ("no frenes, continuá todo lo que puedas") que la IA avanzara
-> con todas las fases de corrido. **La revisión humana de cada fase queda pendiente** y debe
-> registrarse en los campos "Qué revisó y cambió el grupo".
-
 ### Fase 0 -- Setup -- 2026-11-02
 - **Herramienta:** Claude Code (Anthropic)
 - **Prompt(s) principales:** "Ejecutá este plan de implementación teniendo en cuenta todas las consideraciones" (con el archivo PLAN-IconScript adjunto).
