@@ -5,7 +5,7 @@ Registro de dónde y cómo usamos IA en el trabajo final. Alimenta el apartado
 
 ## Cómo trabajamos
 
-El diseño del lenguaje y del compilador es nuestro y está en `PLAN-IconScript.pdf`:
+El diseño del lenguaje y del compilador es nuestro:
 - la sintaxis de IconScript;
 - las reglas semánticas;
 - el código intermedio y la máquina virtual;
@@ -14,10 +14,10 @@ El diseño del lenguaje y del compilador es nuestro y está en `PLAN-IconScript.
 - las interfaces;
 - el orden de las fases.
 
-Le entregamos ese plan a **Claude Code** (Anthropic) como especificación y lo usamos para
+Le entregamos este diseño a **Claude Code** (Anthropic) como especificación y lo usamos para
 implementar el código a partir de él.
 
-En cada fase, los bloques **Prompt** reproducen las indicaciones de nuestro plan que dictaron
+En cada fase, los bloques **Prompt** reproducen las indicaciones que dictaron
 esa parte del trabajo. Son las instrucciones que efectivamente recibió la IA, escritas por
 nosotros. Debajo se registra qué generó la IA, qué errores detectamos y qué conceptos de la
 materia aplica.
