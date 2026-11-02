@@ -11,16 +11,111 @@ WIDTH 24
 REPEAT 5 [ FD 300 RT 144 ]
 ```
 
-## Instalación
+## Cómo se usa
 
-Requisitos:
-- [.NET SDK 8](https://dotnet.microsoft.com/download) o superior (`dotnet --version`).
-- Node 20+ (solo para el editor web).
+### 1. Instalar los requisitos
+
+- [.NET SDK 8](https://dotnet.microsoft.com/download) o superior. Se verifica con `dotnet --version`.
+- [Node.js 20+](https://nodejs.org/), solo si se va a usar el editor web.
+- [Git](https://git-scm.com/).
+
+### 2. Descargar y compilar
 
 ```bash
+git clone https://github.com/marianorueda/CompiladorIconos.git
+cd CompiladorIconos
 dotnet build
 dotnet test
 ```
+
+`dotnet test` tiene que terminar con todos los tests en verde. En el build aparece un único
+*warning* `LL1 warning in Expr`: es esperado y está documentado (ver "Argumento negativo" en
+la referencia).
+
+### 3. Dibujar el primer ícono (línea de comandos)
+
+Crear un archivo de texto `mi-icono.icon`:
+
+```
+TEMPLATE app
+PALETTE sunset
+BACKGROUND GRADIENT :primary :secondary
+COLOR #FFFFFF
+WIDTH 30
+REPEAT 6 [ FD 200 RT 60 ]
+```
+
+Compilarlo:
+
+```bash
+dotnet run --project src/IconScript.Cli -- mi-icono.icon -open
+```
+
+Se genera `mi-icono.svg` al lado del archivo y se abre en el navegador (en este caso, un
+hexágono blanco sobre un fondo degradado). Sin `-open` solo se genera el archivo.
+
+Para ver también el código intermedio que ejecuta la máquina virtual, se agrega `-code`:
+
+```bash
+dotnet run --project src/IconScript.Cli -- mi-icono.icon -code
+```
+
+Si el programa tiene errores, no se genera el SVG y se informa cada error con su posición y su
+tipo:
+
+```
+mi-icono.icon: línea 6, col 4: se esperaba un número  [semántico]
+```
+
+Atajo en Windows: después del build se puede arrastrar cualquier `.icon` sobre
+`src/IconScript.Cli/bin/Debug/net8.0/iconc.exe` para compilarlo y abrirlo.
+
+### 4. Usar el editor web (opcional)
+
+Hacen falta dos terminales abiertas en la carpeta del proyecto.
+
+Terminal 1, la API del compilador:
+
+```bash
+dotnet run --project src/IconScript.Api
+```
+
+Terminal 2, el editor. `npm install` solo hace falta la primera vez:
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+Abrir <http://localhost:5173> en el navegador. Para trabajar:
+
+1. **Escribir** el programa a la izquierda. La vista previa se actualiza sola mientras se escribe.
+2. **Elegir un ejemplo** desde el menú *Ejemplos…* para partir de algo hecho.
+3. **Revisar los errores**: aparecen abajo y la línea queda subrayada. Un clic en un error lleva
+   a esa línea.
+4. **Probar cómo se ve**: elegir una máscara (iOS, Android) o activar *Pantalla de inicio*.
+5. **Exportar**: *Descargar SVG*, *Exportar PNG* o *Exportar paquete de app*. El paquete es un
+   ZIP con los íconos listos para Android, iOS y Expo.
+
+### 5. Aprender el lenguaje
+
+La tortuga empieza en el centro del ícono, mirando hacia arriba. Cada comando la mueve o
+cambia cómo dibuja:
+
+```
+FD 100        // avanza 100 dibujando
+RT 90         // gira 90° a la derecha
+PU FD 50 PD   // avanza sin dibujar (levanta y baja el lápiz)
+ARC 80 180    // semicírculo de radio 80
+```
+
+Para formas que se repiten se usa `REPEAT n [ ... ]`, y para formas simétricas `MIRROR [ ... ]`.
+`FILL color [ ... ]` rellena la figura que se dibuja adentro del bloque. La lista completa de
+comandos está en la "Referencia del lenguaje", más abajo. También se puede ver la pestaña
+*Ayuda* del editor web o partir de los programas de `examples/`.
+
+## Compilación del parser
 
 `dotnet build` compila Coco/R (`tools/CocoR`) y regenera `Scanner.cs`/`Parser.cs` desde
 `src/IconScript.Core/IconScript.ATG` cuando cambia la gramática. Coco informa como *warning* un
