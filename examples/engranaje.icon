@@ -1,0 +1,14 @@
+// examples/engranaje.icon -- engranaje de 10 dientes
+TEMPLATE app
+PALETTE mono
+BACKGROUND GRADIENT :secondary :dark
+MAKE "dientes 10
+PU
+REPEAT :dientes [
+  FD 230
+  FILL :light [ RECT 80 100 ]
+  BK 230
+  RT 360 / :dientes
+]
+FILL :light [ CIRCLE 240 ]
+FILL :secondary [ CIRCLE 90 ]

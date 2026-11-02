@@ -1,0 +1,11 @@
+// examples/circulo.icon -- anillos tipo "objetivo"
+TEMPLATE badge
+PALETTE sunset
+BACKGROUND GRADIENT :accent :primary
+MAKE "r 300
+REPEAT 5 [
+  FILL :light [ CIRCLE :r ]
+  MAKE "r :r - 30
+  FILL :secondary [ CIRCLE :r ]
+  MAKE "r :r - 30
+]

@@ -1,0 +1,9 @@
+// examples/corazon.icon -- corazón simétrico con MIRROR
+TEMPLATE app
+PALETTE candy
+BACKGROUND GRADIENT :light #FBCFE8
+SHADOW
+PU MOVETO 0 (-220) PD
+FILL GRADIENT :primary :secondary [
+  MIRROR [ LT 45 FD 300 ARC 124 225 ]
+]

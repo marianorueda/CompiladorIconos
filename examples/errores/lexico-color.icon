@@ -1,0 +1,4 @@
+// Error LÉXICO: un color necesita exactamente 6 dígitos hexadecimales
+TEMPLATE badge
+BACKGROUND #12G
+FD 100

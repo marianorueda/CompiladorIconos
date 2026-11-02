@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Coco/R para C# (versión del 19/04/2011) compilado desde las fuentes oficiales
+    (CocoSourcesCS.zip, https://ssw.jku.at/Research/Projects/Coco/).
+    Es la herramienta que genera Scanner.cs y Parser.cs a partir de IconScript.ATG.
+    No se modifica su código: solo se compila como aplicación de consola.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>Coco</AssemblyName>
+    <RootNamespace>at.jku.ssw.Coco</RootNamespace>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <!-- Código de 2011: silenciamos warnings que no nos corresponde corregir. -->
+    <NoWarn>$(NoWarn);CS0168;CS0219;CS0162;CS0414;CS0649;CS0169;CS8981;CS0618</NoWarn>
+    <!-- Coco.atg y los .cs regenerados del propio Coco no deben compilarse dos veces. -->
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+  </PropertyGroup>
+</Project>

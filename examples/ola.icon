@@ -1,0 +1,14 @@
+// examples/ola.icon -- olas con semicírculos alternados
+// El segundo argumento negativo va entre paréntesis: ARC 55 (-180) (conflicto LL(1)).
+TEMPLATE app
+PALETTE ocean
+BACKGROUND GRADIENT :light #BAE6FD
+COLOR :primary
+WIDTH 36
+MAKE "y 160
+REPEAT 3 [
+  PU MOVETO -300 :y PD
+  REPEAT 3 [ ARC 50 180 ARC 50 (-180) ]
+  MAKE "y :y - 160
+  COLOR :secondary
+]

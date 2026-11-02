@@ -1,0 +1,9 @@
+// examples/flor.icon -- flor de 8 pétalos sobre fondo degradado
+// Cada pétalo es una "lente": ARC g, giro de 180-g, ARC g vuelve al punto de partida
+// con dirección +225°; con RT 180 la dirección neta avanza 45° por pétalo (8 pétalos).
+TEMPLATE app
+PALETTE ocean
+BACKGROUND GRADIENT :primary :secondary
+COLOR :light
+REPEAT 8 [ FILL :light [ ARC 300 45 RT 135 ARC 300 45 ] RT 180 ]
+FILL :accent [ CIRCLE 50 ]

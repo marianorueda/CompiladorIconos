@@ -1,0 +1,4 @@
+// Error LÉXICO: '@' no forma parte de ningún token
+TEMPLATE app
+COLOR #FF0000
+FD 100 @ RT 90

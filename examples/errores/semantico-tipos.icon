@@ -1,0 +1,6 @@
+// Errores SEMÁNTICOS de tipos: COLOR espera un color, FD un número
+TEMPLATE app
+MAKE "c #FF0000
+COLOR 100
+FD :c
+MAKE "c 5

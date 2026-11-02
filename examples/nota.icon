@@ -1,0 +1,12 @@
+// examples/nota.icon -- nota musical (ícono de reproductor)
+TEMPLATE app
+PALETTE candy
+BACKGROUND GRADIENT :secondary :primary
+COLOR #FFFFFF
+WIDTH 40
+FILL #FFFFFF [ CIRCLE 90 ]
+PU RT 90 FD 70 LT 90 PD
+FD 360
+RT 90
+WIDTH 50
+ARC 120 90

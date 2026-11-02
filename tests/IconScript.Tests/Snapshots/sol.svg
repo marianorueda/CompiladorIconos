@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+<clipPath id="clip"><path d="M512 0 A512 512 0 1 1 512 1024 A512 512 0 1 1 512 0 Z"/></clipPath>
+<linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#38BDF8"/><stop offset="1" stop-color="#0EA5E9"/></linearGradient>
+</defs>
+<g id="background">
+<path d="M512 0 A512 512 0 1 1 512 1024 A512 512 0 1 1 512 0 Z" fill="url(#grad1)"/>
+</g>
+<g id="foreground" clip-path="url(#clip)">
+<circle cx="512" cy="512" r="150" fill="#FACC15"/>
+<path d="M512 312 L512 222" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M612 338.79 L657 260.85" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M685.21 412 L763.15 367" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M712 512 L802 512" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M685.21 612 L763.15 657" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M612 685.21 L657 763.15" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M512 712 L512 802" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M412 685.21 L367 763.15" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M338.79 612 L260.85 657" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M312 512 L222 512" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M338.79 412 L260.85 367" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M412 338.79 L367 260.85" fill="none" stroke="#FACC15" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+</g>
+</svg>

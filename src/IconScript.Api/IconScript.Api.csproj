@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- ASP.NET Minimal API para el editor web (sección 6.2 del plan). -->
+  <PropertyGroup>
+    <RootNamespace>IconScript.Api</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IconScript.Core\IconScript.Core.csproj" />
+  </ItemGroup>
+</Project>

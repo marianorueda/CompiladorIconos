@@ -1,0 +1,13 @@
+// examples/cuadrado.icon -- cuadrados concéntricos girados
+TEMPLATE app
+PALETTE forest
+BACKGROUND :dark
+COLOR :light
+WIDTH 16
+MAKE "lado 400
+REPEAT 4 [
+  RT 22.5
+  FILL GRADIENT :primary :accent [ RECT :lado :lado ]
+  RECT :lado :lado
+  MAKE "lado :lado - 90
+]

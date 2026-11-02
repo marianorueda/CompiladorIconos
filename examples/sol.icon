@@ -1,0 +1,12 @@
+// examples/sol.icon -- sol con rayos
+TEMPLATE badge
+PALETTE sunset
+BACKGROUND GRADIENT #38BDF8 #0EA5E9
+FILL :accent [ CIRCLE 150 ]
+COLOR :accent
+WIDTH 28
+REPEAT 12 [
+  PU FD 200 PD FD 90
+  PU BK 290 PD
+  RT 30
+]

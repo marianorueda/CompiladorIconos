@@ -1,0 +1,8 @@
+// examples/archivo-iconscript.icon -- ícono de archivo del propio lenguaje
+TEMPLATE file
+MAKE "c #6366F1
+BACKGROUND #FFFFFF
+FILL :c [ CIRCLE 140 ]
+COLOR #FFFFFF
+WIDTH 20
+MIRROR [ ARC 80 90 ]

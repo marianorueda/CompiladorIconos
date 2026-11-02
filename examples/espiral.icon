@@ -1,0 +1,12 @@
+// examples/espiral.icon -- espiral cuadrada con variables
+TEMPLATE app
+PALETTE candy
+BACKGROUND :dark
+COLOR :accent
+WIDTH 14
+MAKE "paso 12
+REPEAT 40 [
+  FD :paso
+  RT 91
+  MAKE "paso :paso + 12
+]

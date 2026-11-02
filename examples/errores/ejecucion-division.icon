@@ -1,0 +1,4 @@
+// Error de EJECUCIÓN: la división por cero depende de una variable
+TEMPLATE app
+MAKE "n 0
+FD 100 / :n

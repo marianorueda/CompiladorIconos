@@ -1,0 +1,4 @@
+// Error SINTÁCTICO: ARC necesita dos expresiones (radio y grados)
+TEMPLATE app
+ARC 100
+RT 90

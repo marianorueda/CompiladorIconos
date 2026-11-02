@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+<defs>
+<clipPath id="clip"><path d="M230.4 0 L793.6 0 A230.4 230.4 0 0 1 1024 230.4 L1024 793.6 A230.4 230.4 0 0 1 793.6 1024 L230.4 1024 A230.4 230.4 0 0 1 0 793.6 L0 230.4 A230.4 230.4 0 0 1 230.4 0 Z"/></clipPath>
+<linearGradient id="grad1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0284C7"/><stop offset="1" stop-color="#0D9488"/></linearGradient>
+</defs>
+<g id="background">
+<path d="M230.4 0 L793.6 0 A230.4 230.4 0 0 1 1024 230.4 L1024 793.6 A230.4 230.4 0 0 1 793.6 1024 L230.4 1024 A230.4 230.4 0 0 1 0 793.6 L0 230.4 A230.4 230.4 0 0 1 230.4 0 Z" fill="url(#grad1)"/>
+</g>
+<g id="foreground" clip-path="url(#clip)">
+<path d="M512 512 A300 300 0 0 1 599.87 299.87 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 724.13 424.13 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 724.13 599.87 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 599.87 724.13 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 424.13 724.13 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 299.87 599.87 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 299.87 424.13 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<path d="M512 512 A300 300 0 0 1 424.13 299.87 A300 300 0 0 1 512 512 Z" fill="#E0F2FE"/>
+<circle cx="512" cy="512" r="50" fill="#22D3EE"/>
+</g>
+</svg>

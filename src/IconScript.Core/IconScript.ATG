@@ -1,0 +1,350 @@
+﻿/*----------------------------------------------------------------------------
+  IconScript.ATG -- gramática atribuida de IconScript para Coco/R.
+
+  Coco/R genera a partir de este archivo:
+    - Scanner.cs: autómata finito (DFA) construido desde CHARACTERS y TOKENS.
+    - Parser.cs : parser descendente recursivo LL(1), un método por producción.
+  Nunca se editan a mano: se regeneran con `dotnet build` (o scripts/gen.*).
+
+  Las acciones semánticas (. ... .) implementan una TRADUCCIÓN DIRIGIDA POR LA
+  SINTAXIS en una sola pasada:
+    - atributos de salida <out IconType typ, out double? cv>: cada expresión
+      sintetiza su TIPO (para el chequeo de tipos) y, si es constante, su VALOR
+      (para detectar en compilación radios <= 0, divisiones por cero, etc.).
+    - tabla de símbolos (SymbolTable) para MAKE, PALETTE y :variable.
+    - emisión de código intermedio para la máquina de pila (CodeGen), con
+      backpatching para los saltos hacia adelante de REPEAT.
+----------------------------------------------------------------------------*/
+using System.Globalization;
+
+COMPILER IconScript
+
+  /*--- Declaraciones: se copian dentro de la clase Parser ---*/
+  public SymbolTable tab;              // tabla de símbolos (la crea la fachada)
+  public CodeGen gen;                  // generador de código intermedio
+  public string template = "app";      // metadato: plantilla elegida
+  public bool autoFit = true;          // metadato: NOAUTOFIT lo pone en false
+
+  bool templateSeen = false;           // para validar "TEMPLATE una vez y al inicio"
+  int statementCount = 0;              // comandos ya reconocidos
+  int blockDepth = 0;                  // profundidad de bloques [ ... ]
+  int fillDepth = 0;                   // FILL no se puede anidar
+
+  // Error semántico en la posición de un token concreto (no siempre el último leído).
+  void Error(Token tok, string msg) { errors.SemErr(tok.line, tok.col, msg); }
+
+  // Emite una instrucción registrando la posición del último token leído,
+  // para poder reportar errores de ejecución con línea y columna.
+  int Emit(Op op, double arg = 0, string comment = null) {
+    return gen.Emit(op, arg, t.line, t.col, comment);
+  }
+
+  static double ParseNumber(string s) { return double.Parse(s, CultureInfo.InvariantCulture); }
+  static int ParseColor(string s) { return int.Parse(s.Substring(1), NumberStyles.HexNumber); }
+  // "lado o :lado -> lado (sin el prefijo)
+  static string VarName(string s) { return s.Substring(1); }
+
+  // Reglas de tipo: si el operando es Undef ya se informó un error antes y no se repite.
+  void CheckNumber(IconType typ, Token at) {
+    if (typ == IconType.Color) Error(at, "se esperaba un número");
+  }
+  void CheckColor(IconType typ, Token at) {
+    if (typ == IconType.Number) Error(at, "se esperaba un color");
+  }
+  // Verificación de constantes: solo si el valor se conoce en compilación (cv != null).
+  // Si depende de variables se verifica en ejecución (TurtleVM).
+  void CheckPositive(double? cv, Token at, string msg) {
+    if (cv.HasValue && cv.Value <= 0) Error(at, msg);
+  }
+  // Tipo del resultado de una operación aritmética binaria.
+  IconType Arith(IconType a, IconType b, Token op) {
+    if (a == IconType.Color || b == IconType.Color) {
+      Error(op, "operadores aritméticos requieren números");
+      return IconType.Undef;
+    }
+    if (a == IconType.Undef || b == IconType.Undef) return IconType.Undef;
+    return IconType.Number;
+  }
+
+IGNORECASE   /* FD = fd = Fd (palabras clave sin distinción de mayúsculas) */
+
+CHARACTERS
+  letter = 'A'..'Z' + 'a'..'z'.
+  digit  = '0'..'9'.
+  hex    = digit + "ABCDEFabcdef".
+  cr     = '\r'.
+  lf     = '\n'.
+  tab    = '\t'.
+
+TOKENS
+  number  = digit {digit} ['.' digit {digit}].            /* 100  2.5       */
+  color   = '#' hex hex hex hex hex hex.                  /* #4F46E5        */
+  ident   = letter {letter | digit | '_'}.                /* ocean  app     */
+  varDecl = '"' letter {letter | digit | '_'}.            /* "lado (MAKE)   */
+  varRef  = ':' letter {letter | digit | '_'}.            /* :lado          */
+
+COMMENTS FROM "//" TO lf
+COMMENTS FROM "/*" TO "*/" NESTED
+
+IGNORE cr + lf + tab
+
+PRODUCTIONS
+
+/*----------------------------------------------------------------------------
+  Programa. Según el plan: IconScript = [ TemplateDecl ] { Statement }.
+  Implementación: TEMPLATE es una alternativa más de Statement y la regla
+  "una vez y al inicio" se verifica SEMÁNTICAMENTE. Así un TEMPLATE fuera de
+  lugar da un mensaje claro en lugar de un error sintáctico genérico, y no se
+  introduce ningún conflicto LL(1) (ver docs/diseno.md).
+----------------------------------------------------------------------------*/
+IconScript
+= { Statement }                   (. Emit(Op.HALT); .)
+.
+
+Statement
+= ( TemplateDecl
+  | Move | Turn | Pen | Arc | MoveTo | Repeat | Mirror
+  | ColorCmd | WidthCmd | PaletteCmd | ShadowCmd
+  | Background | Fill | Circle | Rect | Make | NoAutofit
+  )                               (. statementCount++; .)
+.
+
+TemplateDecl                      (. Token kw; .)
+= "TEMPLATE"                      (. kw = t; .)
+  ident                           (. string name = t.val.ToLowerInvariant();
+                                     if (templateSeen || statementCount > 0 || blockDepth > 0)
+                                       Error(kw, "TEMPLATE solo puede aparecer una vez, al inicio del programa");
+                                     else if (!Templates.IsKnown(name))
+                                       Error(t, "plantilla desconocida '" + t.val + "'");
+                                     else template = name;
+                                     templateSeen = true; .)
+.
+
+/*--- Movimiento: BK d se traduce como NEG + MOVE (no hace falta otra instrucción) ---*/
+Move                              (. bool back = false; IconType typ; double? cv; Token start; .)
+= ( "FD" | "FORWARD" | ( "BK" | "BACK" ) (. back = true; .) )
+                                  (. start = la; .)
+  Expr<out typ, out cv>           (. CheckNumber(typ, start);
+                                     if (back) Emit(Op.NEG);
+                                     Emit(Op.MOVE); .)
+.
+
+/*--- Giro: LT g se traduce como NEG + TURN ---*/
+Turn                              (. bool left = false; IconType typ; double? cv; Token start; .)
+= ( "RT" | "RIGHT" | ( "LT" | "LEFT" ) (. left = true; .) )
+                                  (. start = la; .)
+  Expr<out typ, out cv>           (. CheckNumber(typ, start);
+                                     if (left) Emit(Op.NEG);
+                                     Emit(Op.TURN); .)
+.
+
+Pen
+= ( "PU" | "PENUP" )              (. Emit(Op.PENUP); .)
+| ( "PD" | "PENDOWN" )            (. Emit(Op.PENDOWN); .)
+.
+
+/*----------------------------------------------------------------------------
+  Comandos con DOS expresiones (ARC, MOVETO, RECT, GRADIENT): aquí aparece el
+  conflicto LL(1) conocido. En "ARC 30 -180" el "-" puede continuar la primera
+  expresión (resta) o empezar la segunda (negativo). Coco/R lo informa como
+  warning y elige seguir la expresión (resta), igual que el else colgante de
+  Taste. Decisión: se acepta; un segundo argumento negativo se escribe entre
+  paréntesis: ARC 30 (-180).
+----------------------------------------------------------------------------*/
+Arc                               (. IconType t1, t2; double? r, g; Token s1, s2; .)
+= "ARC"                           (. s1 = la; .)
+  Expr<out t1, out r>             (. s2 = la; .)
+  Expr<out t2, out g>             (. CheckNumber(t1, s1); CheckNumber(t2, s2);
+                                     CheckPositive(r, s1, "el radio debe ser mayor que 0");
+                                     Emit(Op.ARC); .)
+.
+
+MoveTo                            (. IconType t1, t2; double? cx, cy; Token s1, s2; .)
+= "MOVETO"                        (. s1 = la; .)
+  Expr<out t1, out cx>            (. s2 = la; .)
+  Expr<out t2, out cy>            (. CheckNumber(t1, s1); CheckNumber(t2, s2);
+                                     Emit(Op.MOVETO); .)
+.
+
+/*----------------------------------------------------------------------------
+  REPEAT n [ cuerpo ]  -- esquema de traducción con BACKPATCHING:
+
+        <código de n>
+  L:    LOOPBEGIN ?        ; salto hacia adelante: el destino aún no se conoce
+  B:    <cuerpo>
+        LOOPEND B          ; salto hacia atrás: B ya se conoce
+  fin:                     ; Patch(L, fin)
+
+  Es el mismo esquema que el while de Taste (FJMP + Patch).
+----------------------------------------------------------------------------*/
+Repeat                            (. IconType typ; double? n; Token start; int loop, body; .)
+= "REPEAT"                        (. start = la; .)
+  Expr<out typ, out n>            (. CheckNumber(typ, start);
+                                     if (n.HasValue && n.Value < 0)
+                                       Error(start, "la cantidad de repeticiones no puede ser negativa");
+                                     loop = Emit(Op.LOOPBEGIN, 0);   // destino pendiente
+                                     body = gen.Pc;
+                                     blockDepth++; .)
+  "[" { Statement } "]"           (. blockDepth--;
+                                     Emit(Op.LOOPEND, body);
+                                     gen.Patch(loop, gen.Pc); .)      // backpatching
+.
+
+/*--- MIRROR [ cuerpo ]: el cuerpo se ejecuta dos veces, la segunda reflejada ---*/
+Mirror                            (. int body; .)
+= "MIRROR"                        (. Emit(Op.MIRRORBEGIN);
+                                     body = gen.Pc;
+                                     blockDepth++; .)
+  "[" { Statement } "]"           (. blockDepth--;
+                                     Emit(Op.MIRROREND, body); .)
+.
+
+ColorCmd                          (. IconType typ; double? cv; Token start; .)
+= "COLOR"                         (. start = la; .)
+  Expr<out typ, out cv>           (. CheckColor(typ, start); Emit(Op.SETCOLOR); .)
+.
+
+WidthCmd                          (. IconType typ; double? cv; Token start; .)
+= "WIDTH"                         (. start = la; .)
+  Expr<out typ, out cv>           (. CheckNumber(typ, start);
+                                     CheckPositive(cv, start, "el grosor debe ser mayor que 0");
+                                     Emit(Op.SETWIDTH); .)
+.
+
+/*--- PALETTE nombre: declara/reasigna primary, secondary, accent, light, dark (Color) ---*/
+PaletteCmd
+= "PALETTE"
+  ident                           (. var colors = Palettes.Find(t.val);
+                                     if (colors == null) Error(t, "paleta desconocida '" + t.val + "'");
+                                     else foreach (var (name, rgb) in colors) {
+                                       Symbol sym = tab.Lookup(name) ?? tab.Insert(name, IconType.Color);
+                                       if (sym.Type == IconType.Number)
+                                         Error(t, "'" + name + "' es de tipo número, no se le puede asignar un color");
+                                       else {
+                                         Emit(Op.PUSH, rgb, "#" + rgb.ToString("X6"));
+                                         Emit(Op.STORE, sym.Slot, ":" + name);
+                                       }
+                                     } .)
+.
+
+ShadowCmd
+= "SHADOW"                        (. Emit(Op.SHADOW); .)
+.
+
+Background                        (. bool grad; .)
+= "BACKGROUND"
+  Paint<out grad>                 (. Emit(grad ? Op.BGGRAD : Op.BG); .)
+.
+
+Fill                              (. bool grad; Token kw; .)
+= "FILL"                          (. kw = t;
+                                     if (fillDepth > 0) Error(kw, "no se puede anidar un FILL dentro de otro FILL"); .)
+  Paint<out grad>                 (. Emit(grad ? Op.FILLGRADBEGIN : Op.FILLBEGIN);
+                                     fillDepth++; blockDepth++; .)
+  "[" { Statement } "]"           (. fillDepth--; blockDepth--;
+                                     Emit(Op.FILLEND); .)
+.
+
+/*--- Pintura: un color o un degradado entre dos colores ---*/
+Paint<out bool gradient>          (. IconType t1, t2; double? cv; Token s1, s2; gradient = false; .)
+= "GRADIENT"                      (. gradient = true; s1 = la; .)
+  Expr<out t1, out cv>            (. s2 = la; .)
+  Expr<out t2, out cv>            (. CheckColor(t1, s1); CheckColor(t2, s2); .)
+|                                 (. s1 = la; .)
+  Expr<out t1, out cv>            (. CheckColor(t1, s1); .)
+.
+
+Circle                            (. IconType typ; double? r; Token start; .)
+= "CIRCLE"                        (. start = la; .)
+  Expr<out typ, out r>            (. CheckNumber(typ, start);
+                                     CheckPositive(r, start, "el radio debe ser mayor que 0");
+                                     Emit(Op.CIRCLE); .)
+.
+
+Rect                              (. IconType t1, t2; double? w, h; Token s1, s2; .)
+= "RECT"                          (. s1 = la; .)
+  Expr<out t1, out w>             (. s2 = la; .)
+  Expr<out t2, out h>             (. CheckNumber(t1, s1); CheckNumber(t2, s2);
+                                     CheckPositive(w, s1, "el ancho debe ser mayor que 0");
+                                     CheckPositive(h, s2, "el alto debe ser mayor que 0");
+                                     Emit(Op.RECT); .)
+.
+
+/*----------------------------------------------------------------------------
+  MAKE "x expr: declara x con el tipo de expr, o la reasigna si ya existe.
+  El símbolo se inserta DESPUÉS de analizar la expresión: en MAKE "x :x + 1
+  la x de la derecha debe estar declarada antes.
+  Una variable no puede cambiar de tipo.
+----------------------------------------------------------------------------*/
+Make                              (. Token nameTok; string name; IconType typ; double? cv; .)
+= "MAKE"
+  varDecl                         (. nameTok = t; name = VarName(t.val); .)
+  Expr<out typ, out cv>           (. Symbol sym = tab.Lookup(name);
+                                     if (sym == null) sym = tab.Insert(name, typ);
+                                     else if (sym.Type == IconType.Undef) sym.Type = typ;
+                                     else if (typ != IconType.Undef && sym.Type != typ)
+                                       Error(nameTok, "'" + name + "' es de tipo " + sym.Type.Spanish()
+                                             + ", no se le puede asignar un " + typ.Spanish());
+                                     Emit(Op.STORE, sym.Slot, ":" + sym.Name); .)
+.
+
+NoAutofit
+= "NOAUTOFIT"                     (. autoFit = false; .)
+.
+
+/*----------------------------------------------------------------------------
+  Expresiones aritméticas: precedencia por niveles (Expr > Term > Factor),
+  asociatividad a izquierda por la iteración { }. Atributos sintetizados:
+    typ = tipo de la expresión; cv = valor si es constante (null si no).
+  El código es postfijo: primero los operandos, después el operador.
+----------------------------------------------------------------------------*/
+Expr<out IconType typ, out double? cv>
+                                  (. IconType t2; double? c2; Token op = null; bool plus = false; .)
+= Term<out typ, out cv>
+  { ( "+"                         (. plus = true; .)
+    | "-"                         (. plus = false; .)
+    )                             (. op = t; .)
+    Term<out t2, out c2>          (. typ = Arith(typ, t2, op);
+                                     cv = (cv.HasValue && c2.HasValue)
+                                          ? (plus ? cv.Value + c2.Value : cv.Value - c2.Value) : (double?)null;
+                                     Emit(plus ? Op.ADD : Op.SUB); .)
+  }
+.
+
+Term<out IconType typ, out double? cv>
+                                  (. IconType t2; double? c2; Token op = null; bool mul = false; .)
+= Factor<out typ, out cv>
+  { ( "*"                         (. mul = true; .)
+    | "/"                         (. mul = false; .)
+    )                             (. op = t; .)
+    Factor<out t2, out c2>        (. typ = Arith(typ, t2, op);
+                                     bool divZero = !mul && c2.HasValue && c2.Value == 0;
+                                     if (divZero) Error(op, "división por cero");
+                                     cv = (cv.HasValue && c2.HasValue && !divZero)
+                                          ? (mul ? cv.Value * c2.Value : cv.Value / c2.Value) : (double?)null;
+                                     Emit(mul ? Op.MUL : Op.DIV); .)
+  }
+.
+
+Factor<out IconType typ, out double? cv>
+                                  (. typ = IconType.Undef; cv = null; Token op = null; .)
+= number                          (. cv = ParseNumber(t.val);
+                                     typ = IconType.Number;
+                                     Emit(Op.PUSH, cv.Value); .)
+| color                           (. int rgb = ParseColor(t.val);
+                                     typ = IconType.Color;
+                                     Emit(Op.PUSH, rgb, "#" + rgb.ToString("X6")); .)
+| varRef                          (. Symbol sym = tab.Find(VarName(t.val), t);
+                                     typ = sym.Type;
+                                     Emit(Op.LOAD, sym.Slot, ":" + sym.Name); .)
+| "(" Expr<out typ, out cv> ")"
+| "-"                             (. op = t; .)
+  Factor<out typ, out cv>         (. if (typ == IconType.Color) {
+                                       Error(op, "operadores aritméticos requieren números");
+                                       typ = IconType.Undef;
+                                     }
+                                     if (cv.HasValue) cv = -cv.Value;
+                                     Emit(Op.NEG); .)
+.
+
+END IconScript.

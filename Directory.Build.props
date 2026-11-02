@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Propiedades comunes a todos los proyectos .NET del repositorio.
+    El plan pide .NET 8. RollForward=Major permite ejecutar los binarios net8.0
+    en una máquina que solo tenga un runtime más nuevo (por ejemplo .NET 10).
+  -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>

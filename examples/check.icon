@@ -1,0 +1,9 @@
+// examples/check.icon -- insignia de "tarea completa"
+TEMPLATE badge
+PALETTE forest
+BACKGROUND GRADIENT :primary :secondary
+SHADOW
+COLOR #FFFFFF
+WIDTH 70
+PU MOVETO -170 10 PD
+RT 135 FD 160 LT 90 FD 340

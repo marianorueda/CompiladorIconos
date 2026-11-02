@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Ejecutable de línea de comandos `iconc` (sección 6.1 del plan). -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <AssemblyName>iconc</AssemblyName>
+    <RootNamespace>IconScript.Cli</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IconScript.Core\IconScript.Core.csproj" />
+  </ItemGroup>
+</Project>

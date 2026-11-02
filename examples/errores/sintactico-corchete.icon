@@ -1,0 +1,3 @@
+// Error SINTÁCTICO: falta el ']' que cierra el REPEAT
+TEMPLATE app
+REPEAT 4 [ FD 100 RT 90

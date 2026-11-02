@@ -1,0 +1,6 @@
+// examples/estrella.icon -- estrella de 5 puntas
+TEMPLATE badge
+BACKGROUND #0F172A
+COLOR #FACC15
+WIDTH 24
+REPEAT 5 [ FD 300 RT 144 ]

@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    IconScript.Core: biblioteca con TODO el compilador (scanner y parser generados
+    por Coco/R, tabla de símbolos, generación de código intermedio, VM y SVG).
+  -->
+  <PropertyGroup>
+    <RootNamespace>IconScript</RootNamespace>
+    <!-- El código generado por Coco/R no usa anotaciones de nulabilidad:
+         lo desactivamos para todo el Core (lección aprendida con Taste). -->
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <!-- Coco/R se compila antes que el Core; no se referencia su ensamblado,
+       solo se necesita que exista Coco.dll para ejecutarlo. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\tools\CocoR\CocoR.csproj"
+                      ReferenceOutputAssembly="false"
+                      Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="IconScript.Tests" />
+  </ItemGroup>
+
+  <!--
+    Regeneración del scanner y del parser.
+    Inputs/Outputs: MSBuild solo ejecuta Coco si el .ATG o los frames son más
+    nuevos que Scanner.cs/Parser.cs (compilación incremental).
+    Los warnings LL(1) que informa Coco se muestran como warnings de compilación
+    para que no pasen desapercibidos: hay que analizarlos y documentarlos.
+  -->
+  <PropertyGroup>
+    <CocoToolsDir>$(MSBuildThisFileDirectory)..\..\tools\</CocoToolsDir>
+    <CocoDll>$(CocoToolsDir)CocoR\bin\$(Configuration)\net8.0\Coco.dll</CocoDll>
+    <CocoFrames>$(CocoToolsDir)coco</CocoFrames>
+    <DotnetHost Condition="'$(DOTNET_HOST_PATH)' != ''">$(DOTNET_HOST_PATH)</DotnetHost>
+    <DotnetHost Condition="'$(DOTNET_HOST_PATH)' == ''">dotnet</DotnetHost>
+  </PropertyGroup>
+
+  <Target Name="GenerarParserConCoco"
+          BeforeTargets="CoreCompile"
+          DependsOnTargets="ResolveProjectReferences"
+          Inputs="IconScript.ATG;$(CocoFrames)\Scanner.frame;$(CocoFrames)\Parser.frame"
+          Outputs="Scanner.cs;Parser.cs">
+    <Exec Command="&quot;$(DotnetHost)&quot; &quot;$(CocoDll)&quot; IconScript.ATG -namespace IconScript -frames &quot;$(CocoFrames)&quot;"
+          WorkingDirectory="$(MSBuildProjectDirectory)"
+          StandardOutputImportance="High"
+          CustomWarningRegularExpression="LL1 warning" />
+    <Delete Files="Scanner.cs.old;Parser.cs.old" />
+    <!-- Por si los .cs no existían al evaluar el proyecto (primer build tras borrarlos). -->
+    <ItemGroup>
+      <Compile Remove="Scanner.cs;Parser.cs" />
+      <Compile Include="Scanner.cs;Parser.cs" />
+    </ItemGroup>
+  </Target>
+</Project>

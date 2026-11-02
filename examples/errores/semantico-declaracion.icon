@@ -1,0 +1,5 @@
+// Errores SEMÁNTICOS: variable no declarada, plantilla y paleta desconocidas
+TEMPLATE poster
+PALETTE arcoiris
+FD :lado
+CIRCLE 0
